@@ -12,39 +12,63 @@
 #define PORT "3000"
 #define BACKLOG 10
 
-int main(int argc, char *argv[]) {
+/**
+ * File descriptor for socket connection.
+ */
+static int sockfd;
+
+void start_server(const char *port);
+
+void serv_forever(const char *port);
+
+void start_server(const char *port) {
   // INFO: Step 0: load up address structs
-  int status;
-  struct addrinfo hints, *servinfo;
+  int status, yes = 1;
+  struct addrinfo hints, *servinfo, *servtemp;
 
   memset(&hints, 0, sizeof(hints)); // makesure the struct is empty
   hints.ai_family = AF_INET;        // IPv4; use `AF_UNSPEC` to support all
   hints.ai_socktype = SOCK_STREAM;  // TCP stream socket
   hints.ai_flags = AI_PASSIVE;      // set my IP
 
-  if ((status = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
+  if ((status = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
     perror("[ERRO] getaddrinfo");
     exit(1);
   }
 
-  // INFO: Step 1: Setup socket
-  int sockfd;
-  if ((sockfd = socket(servinfo->ai_family, servinfo->ai_socktype,
-                       servinfo->ai_protocol)) == -1) {
-    perror("[ERRO] Socket");
-    exit(1);
+  // Since getaddrinfo is a linkedlist,
+  // we should loop through all the results,
+  // and setup socket to the first node
+  for (servtemp = servinfo; servtemp != NULL; servtemp = servtemp->ai_next) {
+    // INFO: Step 1: Setup socket
+    if ((sockfd = socket(servtemp->ai_family, servtemp->ai_socktype,
+                         servtemp->ai_protocol)) == -1) {
+      perror("[ERRO] Socket");
+      exit(1);
+      continue;
+    }
+
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+      perror("[ERRO] setsockopt");
+      exit(1);
+    }
+
+    // INFO: Step 2: Bind port and get the file descriptor
+    if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+      close(sockfd);
+      perror("[ERRO] Binding port");
+      continue;
+    }
+
+    // exit loop immediately after found the first socket
+    break;
   }
 
-  int yes = 1;
-  if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-    perror("[ERRO] setsockopt");
-    exit(1);
-  }
+  // At this point, we no longer use servinfo anymore, so we can free
+  freeaddrinfo(servinfo);
 
-  // INFO: Step 2: Bind port and get the file descriptor
-  if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-    close(sockfd);
-    perror("[ERRO] Binding port");
+  if (servtemp == NULL) {
+    perror("[ERRO] Server failed to bind");
     exit(1);
   }
 
@@ -54,10 +78,11 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  // At this point, we no longer use servinfo anymore, so we can free
-  freeaddrinfo(servinfo);
-
   printf("[INFO] Server waiting for connection...\n");
+}
+
+void serv_forever(const char *port) {
+  start_server(port);
 
   // INFO: Step 4: Always accept connection
   while (1) {
@@ -117,8 +142,13 @@ int main(int argc, char *argv[]) {
 
     close(newfd);
   }
+}
 
-  // unreachable code
+int main(int argc, char *argv[]) {
+  // specify port otherwise use default port
+  char *port = argc == 1 ? PORT : argv[1];
+
+  serv_forever(port);
 
   return 0;
 }
