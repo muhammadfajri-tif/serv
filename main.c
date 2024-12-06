@@ -1,6 +1,8 @@
 #include <arpa/inet.h>
+#include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,10 +23,21 @@ void start_server(const char *port);
 
 void serv_forever(const char *port);
 
+void sigchld_handler(int s) {
+  // waitpid() might overwrite errno, so we save and restore it:
+  int saved_errno = errno;
+
+  while (waitpid(-1, NULL, WNOHANG) > 0)
+    ;
+
+  errno = saved_errno;
+}
+
 void start_server(const char *port) {
   // INFO: Step 0: load up address structs
   int status, yes = 1;
   struct addrinfo hints, *servinfo, *servtemp;
+  struct sigaction sa;
 
   memset(&hints, 0, sizeof(hints)); // makesure the struct is empty
   hints.ai_family = AF_INET;        // IPv4; use `AF_UNSPEC` to support all
@@ -48,6 +61,7 @@ void start_server(const char *port) {
       continue;
     }
 
+    // INFO: Step 1.5: Avoid hogging port by reusing it
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
       perror("[ERRO] setsockopt");
       exit(1);
@@ -75,6 +89,15 @@ void start_server(const char *port) {
   // INFO: Step 3: listening to the network
   if (listen(sockfd, BACKLOG) == -1) {
     perror("[ERRO] Failed to listen");
+    exit(1);
+  }
+
+  // reap all deadge processes, avoid zombie because they're scary
+  sa.sa_handler = sigchld_handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART;
+  if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+    perror("sigaction");
     exit(1);
   }
 
