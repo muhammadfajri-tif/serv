@@ -106,9 +106,9 @@ void serv_forever(const char *port) {
     struct sockaddr_storage clientinfo;
     socklen_t addr_size = sizeof(clientinfo);
 
-    // newfd is a file descriptor for send and receive data to client
-    int newfd = accept(sockfd, (struct sockaddr *)&clientinfo, &addr_size);
-    if (newfd == -1) {
+    // clientfd is a file descriptor for send and receive data to client
+    int clientfd = accept(sockfd, (struct sockaddr *)&clientinfo, &addr_size);
+    if (clientfd == -1) {
       perror("[ERRO] Failed to accept connection");
       exit(1);
     };
@@ -126,14 +126,14 @@ void serv_forever(const char *port) {
       close(sockfd);
 
       // INFO: Step 5.1: Send welcome message
-      if (send(newfd, "Welcome!\n", 9, 0) == -1) {
+      if (send(clientfd, "Welcome!\n", 9, 0) == -1) {
         perror("[ERRO] Failed to sent message");
         exit(1);
       }
 
       // INFO: Step 5.2: Receive message
       char buffer_msg[256];
-      int bytes_receive = recv(newfd, buffer_msg, sizeof(buffer_msg), 0);
+      int bytes_receive = recv(clientfd, buffer_msg, sizeof(buffer_msg), 0);
       if (bytes_receive == -1) {
         perror("[ERRO] Failed receive message");
         exit(1);
@@ -148,15 +148,15 @@ void serv_forever(const char *port) {
       // INFO: Step 5.3: Send exit message
       char *msg = "Thank you for using our service!\n";
 
-      if (send(newfd, msg, strlen(msg), 0) == -1) {
+      if (send(clientfd, msg, strlen(msg), 0) == -1) {
         perror("[ERRO] Failed to sent message");
         exit(1);
       }
 
-      close(newfd);
+      close(clientfd);
       exit(0);
     }
 
-    close(newfd);
+    close(clientfd);
   }
 }
