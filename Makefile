@@ -1,20 +1,18 @@
 CC ?= gcc
 CFLAGS += -g -Wall -Wextra -ftrapv -Wshadow -Wundef -Wcast-align -Wunreachable-code
 
+DEST = ./build
+SRC = main.c net.c
+OBJ = $(SRC:%.c=%(DEST)/%.o)
 
-build: main.o net.o
+.PHONY: build clean
+
+build: $(DEST)/main.o $(DEST)/net.o
 	$(CC) $(CFLAGS) -o server $^
 
-main.o: main.c net.h
-	$(CC) $(CFLAGS) -c -o main.o main.c
-
-net.o: net.c net.h
-	$(CC) $(CFLAGS) -c -o net.o net.c
-
-
-.PHONY: clean
+$(DEST)/%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	@rm server
-	@rf -rf *.o
-	@rm -rf build/*
+	@rm -rf $(DEST)/*
