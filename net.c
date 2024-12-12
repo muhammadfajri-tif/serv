@@ -12,12 +12,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-/**
- * File descriptor for socket connection.
- */
-static int sockfd;
-
-void sigchld_handler(int s) {
+void sigchld_handler() {
   // waitpid() might overwrite errno, so we save and restore it:
   int saved_errno = errno;
 
@@ -27,11 +22,10 @@ void sigchld_handler(int s) {
   errno = saved_errno;
 }
 
-void start_server(const char *port) {
+int create_socket(const char *port) {
   // INFO: Step 0: load up address structs
-  int status, yes = 1;
+  int socketfd, status, yes = 1;
   struct addrinfo hints, *servinfo, *servtemp;
-  struct sigaction sa;
 
   memset(&hints, 0, sizeof(hints)); // makesure the struct is empty
   hints.ai_family = AF_INET;        // IPv4; use `AF_UNSPEC` to support all
@@ -41,6 +35,7 @@ void start_server(const char *port) {
   if ((status = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
     perror("[ERRO] getaddrinfo");
     exit(1);
+    return -1;
   }
 
   // Since getaddrinfo is a linkedlist,
@@ -48,22 +43,23 @@ void start_server(const char *port) {
   // and setup socket to the first node
   for (servtemp = servinfo; servtemp != NULL; servtemp = servtemp->ai_next) {
     // INFO: Step 1: Setup socket
-    if ((sockfd = socket(servtemp->ai_family, servtemp->ai_socktype,
-                         servtemp->ai_protocol)) == -1) {
+    if ((socketfd = socket(servtemp->ai_family, servtemp->ai_socktype,
+                           servtemp->ai_protocol)) == -1) {
       perror("[ERRO] Socket");
       exit(1);
       continue;
     }
 
     // INFO: Step 1.5: Avoid hogging port by reusing it
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+    if (setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) ==
+        -1) {
       perror("[ERRO] setsockopt");
       exit(1);
     }
 
     // INFO: Step 2: Bind port and get the file descriptor
-    if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-      close(sockfd);
+    if (bind(socketfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+      close(socketfd);
       perror("[ERRO] Binding port");
       continue;
     }
@@ -78,36 +74,31 @@ void start_server(const char *port) {
   if (servtemp == NULL) {
     perror("[ERRO] Server failed to bind");
     exit(1);
+    return -1;
   }
 
+  return socketfd;
+}
+
+void start_listening(int socketfd, const char *port) {
   // INFO: Step 3: listening to the network
-  if (listen(sockfd, BACKLOG) == -1) {
+  if (listen(socketfd, BACKLOG) == -1) {
     perror("[ERRO] Failed to listen");
     exit(1);
   }
 
-  // reap all deadge processes, avoid zombie because they're scary
-  sa.sa_handler = sigchld_handler;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_RESTART;
-  if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-    perror("sigaction");
-    exit(1);
-  }
-
-  printf("[INFO] Server waiting for connection...\n");
+  printf("Server started %shttp://127.0.0.1:%s%s\n", "\033[92m", port,
+         "\033[0m");
 }
 
-void serv_forever(const char *port) {
-  start_server(port);
-
+void handle_request(int socketfd) {
   // INFO: Step 4: Always accept connection
   while (1) {
     struct sockaddr_storage clientinfo;
     socklen_t addr_size = sizeof(clientinfo);
 
     // clientfd is a file descriptor for send and receive data to client
-    int clientfd = accept(sockfd, (struct sockaddr *)&clientinfo, &addr_size);
+    int clientfd = accept(socketfd, (struct sockaddr *)&clientinfo, &addr_size);
     if (clientfd == -1) {
       perror("[ERRO] Failed to accept connection");
       exit(1);
@@ -123,7 +114,7 @@ void serv_forever(const char *port) {
     if (!fork()) {
       // no need listener, so we can close socket file descriptor,
       // and accept next connection
-      close(sockfd);
+      close(socketfd);
 
       // INFO: Step 5.1: Send welcome message
       if (send(clientfd, "Welcome!\n", 9, 0) == -1) {
@@ -159,4 +150,24 @@ void serv_forever(const char *port) {
 
     close(clientfd);
   }
+}
+
+void start_server(const char *port) {
+  int socketfd;
+  struct sigaction sa;
+
+  socketfd = create_socket(port);
+
+  start_listening(socketfd, port);
+
+  // reap all deadge processes, avoid zombie because they're scary
+  sa.sa_handler = sigchld_handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART;
+  if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+    perror("sigaction");
+    exit(1);
+  }
+
+  handle_request(socketfd);
 }
