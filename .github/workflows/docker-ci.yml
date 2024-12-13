@@ -8,8 +8,6 @@ on:
     tags:
       -'**'
 
-  workflow_dispatch: # Allow manual triggering of the workflow
-
 jobs:
   build:
     runs-on: ubuntu-latest
