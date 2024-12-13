@@ -15,6 +15,8 @@ Table of contents:
 
 <!--toc:end-->
 
+[![Docker Image CI](https://github.com/muhammadfajri-tif/serv/actions/workflows/docker-ci.yml/badge.svg?event=status)](https://github.com/muhammadfajri-tif/serv/actions/workflows/docker-ci.yml)
+
 ---
 
 ## Overview
