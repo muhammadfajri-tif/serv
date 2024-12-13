@@ -26,7 +26,7 @@ WORKDIR /app
 COPY ./www /app/www
 
 # Copy the compiled binary from the builder stage
-COPY --from=builder /app/server .
+COPY --from=builder /app/serv .
 
 EXPOSE 8080
 
