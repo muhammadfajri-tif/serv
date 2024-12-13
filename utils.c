@@ -73,6 +73,7 @@ void logger(int socket_fd, enum status_code type, char *s1, char *s2) {
     break;
   case OK:
     sprintf(logbuffer, "HTTP/1.1 200 OK: %s:%s:%d", s1, s2, socket_fd);
+    break;
   case CREATED:
     sprintf(logbuffer, "HTTP/1.1 201 CREATED: %s:%s:%d", s1, s2, socket_fd);
     break;

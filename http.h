@@ -45,9 +45,6 @@ extern struct client_request_t req;
 /* Buffer for store payload size */
 extern int payload_size;
 
-/* Array for store HTTP request headers */
-static header_t reqhdr[20] = {{(char *)"\0", (char *)"\0"}};
-
 /* Function for get HTTP request header by name */
 char *request_header(const char *name);
 

@@ -3,6 +3,8 @@
 
 #include "http.h"
 
+extern enum status_code sc;
+
 // Response
 #define RESPONSE_PROTOCOL "HTTP/1.1"
 

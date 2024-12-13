@@ -15,7 +15,7 @@ int file_exists(const char *file_name);
 int read_file(const char *file_name);
 
 /* Procedure to handle escape characters */
-static void uri_unescape(char *uri);
+void uri_unescape(char *uri);
 
 /* Procedure to write log to file and the coresponding file descriptor */
 void logger(int socket_fd, enum status_code type, char *s1, char *s2);

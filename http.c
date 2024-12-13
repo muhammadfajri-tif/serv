@@ -9,9 +9,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-struct client_request_t req;
-int payload_size;
-
 struct {
   int code;
   char *message;
@@ -48,6 +45,12 @@ struct {
     {"js", "application/javascript"},
     {"json", "application/json"},
 };
+
+struct client_request_t req;
+int payload_size;
+
+/* Array for store HTTP request headers */
+static header_t reqhdr[20] = {{(char *)"\0", (char *)"\0"}};
 
 // get request header by name
 char *request_header(const char *name) {
