@@ -3,7 +3,7 @@
 
 /* Web Server Configuration */
 // Port Number
-#define PORT "3000"
+#define PORT "8080"
 // Buffer for store data from client
 #define BUFFER_SIZE 4096
 // Max length for queue of pending connection

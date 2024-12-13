@@ -28,9 +28,9 @@ COPY ./www /app/www
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/server .
 
-EXPOSE 3000
+EXPOSE 8080
 
-ENV PORT_NUMBER=3000
+ENV PORT_NUMBER=8080
 
 # Command to run the compiled binary
-CMD ["sh", "-c", "./server ${PORT_NUMBER}"]
+CMD ["sh", "-c", "./serv ${PORT_NUMBER}"]
