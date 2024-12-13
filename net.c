@@ -1,8 +1,10 @@
 #include "net.h"
+#include "http.h"
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <semaphore.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +13,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+sem_t semaphore;
 
 void sigchld_handler() {
   // waitpid() might overwrite errno, so we save and restore it:
@@ -92,6 +96,9 @@ void start_listening(int socketfd, const char *port) {
 }
 
 void handle_request(int socketfd) {
+  // Ignore SIGCHLD to avoid zombie threads
+  signal(SIGCHLD, SIG_IGN);
+
   // INFO: Step 4: Always accept connection
   while (1) {
     struct sockaddr_storage clientinfo;
@@ -104,47 +111,16 @@ void handle_request(int socketfd) {
       exit(1);
     };
 
-    // log client information
-    char client_addr[INET_ADDRSTRLEN];
-    inet_ntop(clientinfo.ss_family, (struct sockaddr *)&clientinfo.ss_family,
-              client_addr, sizeof(client_addr));
-    printf("\n[INFO] Server got connection from %s\n", client_addr);
+    sem_wait(&semaphore); // wait for available slot
 
     // NOTE: handle message using multi-process
     if (!fork()) {
       // no need listener, so we can close socket file descriptor,
       // and accept next connection
       close(socketfd);
-
-      // INFO: Step 5.1: Send welcome message
-      if (send(clientfd, "Welcome!\n", 9, 0) == -1) {
-        perror("[ERRO] Failed to sent message");
-        exit(1);
-      }
-
-      // INFO: Step 5.2: Receive message
-      char buffer_msg[256];
-      int bytes_receive = recv(clientfd, buffer_msg, sizeof(buffer_msg), 0);
-      if (bytes_receive == -1) {
-        perror("[ERRO] Failed receive message");
-        exit(1);
-      } else if (bytes_receive == 0) {
-        perror("[WARN] Remote connection already close with status");
-      } else {
-        printf("Receive message from client: %s", buffer_msg);
-      }
-      printf("[INFO] Number of bytes receive from the client: %d\n",
-             bytes_receive);
-
-      // INFO: Step 5.3: Send exit message
-      char *msg = "Thank you for using our service!\n";
-
-      if (send(clientfd, msg, strlen(msg), 0) == -1) {
-        perror("[ERRO] Failed to sent message");
-        exit(1);
-      }
-
+      respond(clientfd);
       close(clientfd);
+      sem_post(&semaphore); // release the semaphore
       exit(0);
     }
 
@@ -155,6 +131,9 @@ void handle_request(int socketfd) {
 void start_server(const char *port) {
   int socketfd;
   struct sigaction sa;
+
+  // initialize semaphore to handle multiconnection
+  sem_init(&semaphore, 0, MAX_CONNECTION);
 
   socketfd = create_socket(port);
 
