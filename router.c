@@ -1,6 +1,9 @@
 #include "router.h"
+#include "http.h"
 #include "utils.h"
 #include <stdio.h>
+
+enum status_code sc;
 
 void route() {
   ROUTE_START()
@@ -10,6 +13,8 @@ void route() {
     sprintf(index_html, "%s%s", ROOT_DIR, ROOT_FILE);
 
     HTTP_200;
+    logger(0, sc = OK, request_header("User-Agent"), req.uri);
+
     if (file_exists(index_html)) {
       read_file(index_html);
     } else {
@@ -19,6 +24,8 @@ void route() {
 
   HEAD("/") {
     HTTP_200;
+    logger(0, sc = OK, request_header("User-Agent"), req.uri);
+
     header_t *h = request_headers();
 
     while (h->name) {
@@ -27,17 +34,27 @@ void route() {
     }
   }
 
+  POST("/") {
+    HTTP_201;
+    logger(0, sc = CREATED, request_header("User-Agent"), req.uri);
+
+    printf("Data sent %d bytes.\n", payload_size);
+    if (payload_size > 0)
+      printf("Request body: %s", req.payload);
+  }
+
   GET("/test") {
     HTTP_200;
+    logger(0, sc = OK, request_header("User-Agent"), req.uri);
 
     printf("Hello. This is test page.");
   }
 
-  POST("/") {
-    HTTP_201;
-    printf("Data sent %d bytes.\n", payload_size);
-    if (payload_size > 0)
-      printf("Request body: %s", req.payload);
+  GET("/healthcheck") {
+    HTTP_200;
+    logger(0, sc = OK, request_header("User-Agent"), req.uri);
+
+    printf("OK");
   }
 
   GET(req.uri) {
@@ -46,9 +63,13 @@ void route() {
 
     if (file_exists(file_name)) {
       HTTP_200;
+      logger(0, sc = OK, request_header("User-Agent"), req.uri);
+
       read_file(file_name);
     } else {
       HTTP_404;
+      logger(0, sc = NOTFOUND, request_header("User-Agent"), req.uri);
+
       sprintf(file_name, "%s%s", ROOT_DIR, NOT_FOUND_FILE);
       if (file_exists(file_name))
         read_file(file_name);
