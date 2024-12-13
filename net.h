@@ -1,9 +1,6 @@
 #if !defined(net_H)
 #define net_H
 
-#define PORT "3000"
-#define BACKLOG 10
-
 /* Signal handler to get errno from child process.
   Further used for reap all dead process to avoid zombie. */
 void sigchld_handler();
