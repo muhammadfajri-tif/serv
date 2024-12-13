@@ -77,6 +77,24 @@ connection.
 
 5. Open [http://localhost:8080/](http://localhost:8080/) or [http://localhost:`<your-port>`/](http://localhost:6969).
 
+### Run Serv in Docker
+
+Serv available as image in [Docker Hub](https://hub.docker.com/r/muhammadfajritif/serv).
+
+To run Serv, simply pull the image
+
+```sh
+docker pull muhammadfajritif/serv:latest
+```
+
+Then launch the container
+
+```sh
+docker run -p 8080:8080 muhammadfajritif/serv
+```
+
+Open [http://localhost:8080/](http://localhost:8080/)
+
 ---
 
 ## Configuration
