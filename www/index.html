@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Serv HTTP Server</title>
+    <meta
+      name="description"
+      content="This is a very simple HTTP server for Unix, using fork()."
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta property="og:title" content="Serv: Simple HTTP Server" />
+    <meta property="og:type" content="" />
+    <meta
+      property="og:url"
+      content="https://github.com/muhammadfajri-tif/serv"
+    />
+    <meta property="og:image" content="favicon-32x32.png" />
+
+    <link rel="manifest" href="site.webmanifest" />
+    <link rel="icon" href="favicon.ico" sizes="32x32" />
+    <link rel="icon" href="favicon-32x32.png" type="image/png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+    <link href="css/style.css" rel="stylesheet" />
+    <meta name="theme-color" content="#1b1b1b" />
+    <script
+      src="https://unpkg.com/htmx.org@2.0.3"
+      integrity="sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <img class="image" src="assets/cat.jpg" alt="cat" />
+    <h1>Welcome!</h1>
+    <h2 class="title">This is the entry point of the app.</h2>
+
+    <div class="container">
+      <div id="form-input">
+        <textarea rows="2" cols="20" name="message"></textarea>
+
+        <button
+          hx-post="/"
+          hx-swap="innerHTML"
+          hx-target="#result"
+          hx-include="[name='message']"
+        >
+          Submit
+        </button>
+      </div>
+
+      <div id="result"></div>
+    </div>
+
+    <footer>
+      <p class="message">
+        Made with 🩶 by Fajri. Code available at:
+        <a href="https://github.com/muhammadfajri-tif/serv"
+          >github.com/muhammadfajri-tif/serv</a
+        >
+      </p>
+    </footer>
+    <script src="js/script.js"></script>
+  </body>
+</html>
