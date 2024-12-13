@@ -1,6 +1,6 @@
 # SERV
 
-[![Docker Image CI](https://github.com/muhammadfajri-tif/serv/actions/workflows/docker-ci.yml/badge.svg?event=status)](https://github.com/muhammadfajri-tif/serv/actions/workflows/docker-ci.yml)
+[![Docker Image CI](https://github.com/muhammadfajri-tif/serv/actions/workflows/docker-ci.yml/badge.svg)](https://github.com/muhammadfajri-tif/serv/actions/workflows/docker-ci.yml)
 
 <!--toc:start-->
 
