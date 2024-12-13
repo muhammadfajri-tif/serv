@@ -2,11 +2,8 @@ name: Docker Image CI
 
 on:
   push:
-    paths:
-      - '!*.md'
-      - '!LICENSE'
     tags:
-      -'**'
+      -'*'
 
 jobs:
   build:
