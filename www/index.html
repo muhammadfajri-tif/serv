@@ -32,21 +32,48 @@
   </head>
   <body>
     <img class="image" src="assets/cat.jpg" alt="cat" />
-    <h1>Welcome!</h1>
-    <h2 class="title">This is the entry point of the app.</h2>
+    <h1>Welcome to Serv!</h1>
+    <h2 class="title">
+      Serv is a simple HTTP server. This is the entry point of the app.
+    </h2>
 
     <div class="container">
-      <div id="form-input">
-        <textarea rows="2" cols="20" name="message"></textarea>
+      <div id="route-path">
+        <h3>Try another path</h3>
+        <ul>
+          <li>[GET] / (You are here!)</li>
+          <li>
+            <a href="/">[POST] / </a> or try it in
+            <a href="#test-post">Test Post</a> section below.
+          </li>
+          <li>
+            <a href="/">[HEAD] / </a>
+          </li>
+          <li>
+            <a href="/test">[GET] /test</a>
+          </li>
+          <li>
+            <a href="/healthcheck">[GET] /healthcheck</a>
+          </li>
+        </ul>
+      </div>
 
-        <button
-          hx-post="/"
-          hx-swap="innerHTML"
-          hx-target="#result"
-          hx-include="[name='message']"
-        >
-          Submit
-        </button>
+      <br />
+
+      <div id="test-post">
+        <h3>Test POST Method</h3>
+        <div id="form-input">
+          <textarea rows="2" cols="20" name="message"></textarea>
+
+          <button
+            hx-post="/"
+            hx-swap="innerHTML"
+            hx-target="#result"
+            hx-include="[name='message']"
+          >
+            Submit
+          </button>
+        </div>
       </div>
 
       <div id="result"></div>
