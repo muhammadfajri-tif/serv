@@ -42,6 +42,7 @@ connection.
 - `http.h` and `http.c`: Manages HTTP request and response for client.
 - `utils.h` and `utils.c`: Utility functions for parsing and validating file/request.
 - `router.h` and `router.c`: Define and manages available route and it's method.
+- `www/`: Root directory where static content is served.
 
 ---
 
