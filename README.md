@@ -57,9 +57,10 @@ connection.
 
 2. (optional) [Configure Web Server](#configuration) in [`config.h`](./config.h)
 
-3. Build/Compile the source code
+3. Create `build` directory and compile the source code
 
    ```sh
+   mkdir build
    make build
    ```
 
